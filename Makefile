@@ -336,6 +336,8 @@ LIBNAME=lib$(TARGET).a
 lib: $(LIBNAME)
 
 
+upload: hex
+	teensy_loader_cli -mmcu=$(MCU) -v -w $(TARGET).hex
 
 # Eye candy.
 # AVR Studio 3.x does not check make's exit code but relies on
