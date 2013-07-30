@@ -4,3 +4,6 @@
 *.lst
 *.map
 *.o
+*.eep
+*.lss
+*.sym
