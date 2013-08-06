@@ -1,0 +1,46 @@
+:...............¦|||||||||||||||¦|||||||||||||||¦||||||||||||||| <- PIND0 value
+:...............:...............:...............¦||||||||||||||| <- PIND0 value
+            >
+
+-2 - -1: synchronization delay for PIND0
+0-1: interrupt flag raised
+1-3: current instruction executed
+2: push PC
+2: rjmp to handler
+-> 3 - 7 cycles until INT0_vect starts
+
+Number of ones n cycles into INT0_vect before reading PIND0:
+ 1 cycles:  0 (N=125141)
+ 2 cycles:  0 (N=101675)
+ 3 cycles:  0.0030% (N=66500)
+ 4 cycles:  0.0076% (N=52970)
+ 5 cycles:  0.012% (N=50476)
+ 6 cycles:  0.018% (N=60631)
+ 7 cycles:  0.030% (N=50143)
+ 8 cycles:  0.032% (N=55547)
+ 9 cycles:  0.034% (N=50196)
+10 cycles:  0.051% (N=52962)
+13 cycles:  0.065% (N=58602)
+16 cycles:  0.096% (N=57383)
+24 cycles:  0.10% (N=52815)
+32 cycles:  0.13% (N=50552)
+40 cycles:  0.12% (N=59423)
+48 cycles:  0.13% (N=52243)  
+52 cycles:  0.11% (N=54100)
+53 cycles: 21.73% (N=27054)
+54 cycles: 78.05% (N=53024)
+55 cycles: 99.74% (N=54386)
+56 cycles: 99.82% (N=61880)
+64 cycles: 99.73% (N=50039)
+68 cycles: 99.71% (N=54851)
+70 cycles: 99.70% (N=31660)
+71 cycles: 82.36% (N=18251)
+72 cycles: 31.21% (N=26319)
+73 cycles:  0 (N=49179)
+74 cycles:  0 (N=47455)
+76 cycles:  0 (N=30463)
+80 cycles:  0 (N=51250) 
+82 cycles:  0 (N=41362)
+83 cycles:  0.0029% (N=69751)
+84 cycles:  0.014% (N=53724)
+88 cycles:  0.048% (N=59945)
