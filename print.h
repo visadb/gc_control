@@ -10,7 +10,9 @@
 #define pchar(c) usb_debug_putchar(c)
 
 void print_P(const char *s);
-void phex(unsigned char c);
-void phex16(unsigned int i);
+void phex4(uint8_t c);
+void phex8(uint8_t c);
+void phex16(uint16_t i);
+void phex32(uint32_t i);
 
 #endif

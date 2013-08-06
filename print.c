@@ -40,21 +40,28 @@ void print_P(const char *s)
 	}
 }
 
-void phex1(unsigned char c)
+void phex4(uint8_t c)
 {
+  c &= 0x0f;
 	usb_debug_putchar(c + ((c < 10) ? '0' : 'A' - 10));
 }
 
-void phex(unsigned char c)
+void phex8(uint8_t c)
 {
-	phex1(c >> 4);
-	phex1(c & 15);
+	phex4(c >> 4);
+	phex4(c & 15);
 }
 
-void phex16(unsigned int i)
+void phex16(uint16_t i)
 {
-	phex(i >> 8);
-	phex(i);
+	phex8(i >> 8);
+	phex8(i);
+}
+
+void phex32(uint32_t i)
+{
+	phex16(i >> 16);
+	phex16(i);
 }
 
 
