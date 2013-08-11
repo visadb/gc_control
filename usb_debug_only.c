@@ -35,8 +35,8 @@
 
 // You can change these to give your code its own name.  On Windows,
 // these are only used before an INF file (driver install) is loaded.
-#define STR_MANUFACTURER	L"Your Name"
-#define STR_PRODUCT		L"Your USB Device"
+#define STR_MANUFACTURER	L"Visa Putkinen"
+#define STR_PRODUCT		L"GameCube controllerizer"
 
 
 // Mac OS-X and Linux automatically load the correct drivers.  On
