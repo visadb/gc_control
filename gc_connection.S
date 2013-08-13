@@ -86,13 +86,10 @@ waitFall:
 	nop
 	nop
 dataSignalFell:
-	; I check the pin on the 32th cycle which is the safest place
-	; we need to waste some cycles in alignDelay.
+	; I check the pin on the 50th cycle.
 
 	rcall alignDelay	; waste enough cycles to be aligned on cycle 32
-	nop ; placeholder for debug intruction
 	in r16, IO_PIND		; read the input port
-	nop ; placeholder for debug intruction
 	andi r16, GC_DATA_MASK	; isolate the data bit
 	st z+, r16		; store the value
 
@@ -109,9 +106,9 @@ waitHigh:
 
 	rjmp readNextBit
 
-; 3 + 1 + 2*3-1 + 1 + 4 = 14
+; 3 + 1 + 9*3-1 + 1 + 4 = 48
 alignDelay:
-	ldi r16, 2
+	ldi r16, 9
 lp634534:
 	dec r16
 	brne lp634534
@@ -179,70 +176,55 @@ lp_sendGCData_bits:
 	nop
 send0:
 	PULL_BUS_LOW
-	ldi r16, 15
-lp_send0_3us:
+	ldi r16, 18
+lp_send0_3.6us:
 	dec r16
-	brne lp_send0_3us
+	brne lp_send0_3.6us
+	nop
 	nop
 
 	RELEASE_BUS
-	ldi r16, 2
-lp_send0_1us:
+	ldi r16, 3
+lp_send0_1.4us:
 	dec r16
-	brne lp_send0_1us
+	brne lp_send0_1.4us
+	nop
+	nop
 
 	dec r23
 	brne lp_sendGCData_bits
-
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	; STOP BIT
-	PULL_BUS_LOW
-	ldi r16, 4
-stbdly0:
-	dec r16
-	brne stbdly0
-	nop
-	RELEASE_BUS
-	ret
+	rjmp send_stop_bit
 
 send1:
 	PULL_BUS_LOW
-
-	ldi r16, 4
-lp_send1_1us:
+	ldi r16, 5
+lp_send1_1.2us:
 	dec r16
-	brne lp_send1_1us
+	brne lp_send1_1.2us
 	nop
 	nop
 
 	RELEASE_BUS
-
-	ldi r16, 12
-lp_send1_3us:
+	ldi r16, 17
+lp_send1_3.8us:
 	dec r16
-	brne lp_send1_3us
-	nop
-	nop
+	brne lp_send1_3.8us
 
 	dec r23
 	brne lp_sendGCData_bits
+	rjmp send_stop_bit
 
-nop
-nop
-nop
-nop
-nop
-nop
-	; STOP BIT
+send_stop_bit:
+	nop
+	nop
+	nop
+	nop
 	PULL_BUS_LOW
-	ldi r16,4
-stbdly1:
+	ldi r16,5
+lp_stop_bit_delay:
 	dec r16
-	brne stbdly1
+	brne lp_stop_bit_delay
+	nop
 	nop
 	RELEASE_BUS
+	ret

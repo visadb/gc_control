@@ -16,9 +16,22 @@ Seen on wire by oscilloscope when only replying to GET ID request:
 TIMING
 ------
 
-:...............¦|||||||||||||||¦|||||||||||||||¦||||||||||||||| <- PIND0
-:...............:...............:...............¦||||||||||||||| <- PIND0
-    <       >
+Legend:
+ . = signal low
+ ^ = signal rising
+ ¯ = signal high
+ one character per cycle at 16 MHz
+
+zero bit:
+..........................................................^^^^^^^^¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+
+one bit:
+...................^^^^^^^^¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+
+
+------------------------
+Interrupt delay estimate
+------------------------
 
 -2 - -1: synchronization delay for PIND0
 0-1: interrupt flag raised
@@ -26,6 +39,8 @@ TIMING
 2: push PC
 2: rjmp to handler
 -> 3 - 7 cycles until INT0_vect starts
+
+
 
 Number of ones n cycles into INT0_vect before reading PIND0:
  1 cycles:  0 (N=125141)
