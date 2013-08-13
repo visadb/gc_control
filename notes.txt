@@ -1,3 +1,21 @@
+------------
+MEASUREMENTS
+------------
+
+WII encodes data with 5µs per bit, not 4µs!!!
+Low bit  = 3.6µs low + 0.5µs rise + 0.9µs high
+High bit = 1.2µs low + 0.5µs rise + 3.3µs high
+
+Seen on wire by oscilloscope when only replying to GET ID request:
+
+|-GET ID--|               |-----ID------|              |-GET ORIG|
+
+0x00 <STOP> <5.9µs pause> 0x090020 <STOP> <16µs pause> 0x41 <STOP>
+
+------
+TIMING
+------
+
 :...............¦|||||||||||||||¦|||||||||||||||¦||||||||||||||| <- PIND0
 :...............:...............:...............¦||||||||||||||| <- PIND0
     <       >
@@ -25,7 +43,7 @@ Number of ones n cycles into INT0_vect before reading PIND0:
 24 cycles:  0.10% (N=52815)
 32 cycles:  0.13% (N=50552)
 40 cycles:  0.12% (N=59423)
-48 cycles:  0.13% (N=52243)  
+48 cycles:  0.13% (N=52243)
 52 cycles:  0.11% (N=54100)
 53 cycles: 21.73% (N=27054)
 54 cycles: 78.05% (N=53024)
@@ -39,7 +57,7 @@ Number of ones n cycles into INT0_vect before reading PIND0:
 73 cycles:  0 (N=49179)
 74 cycles:  0 (N=47455)
 76 cycles:  0 (N=30463)
-80 cycles:  0 (N=51250) 
+80 cycles:  0 (N=51250)
 82 cycles:  0 (N=41362)
 83 cycles:  0.0029% (N=69751)
 84 cycles:  0.014% (N=53724)
