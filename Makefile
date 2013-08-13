@@ -22,7 +22,7 @@ TARGET = gc_control
 
 # List C source files here. (C dependencies are automatically generated.)
 SRC =	$(TARGET).c \
-	usb_debug_only.c \
+	usb_rawhid.c \
 	print.c
 
 MCU = at90usb1286      # Teensy++ 2.0

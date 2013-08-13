@@ -1,4 +1,4 @@
-/* Very basic print functions, intended to be used with usb_debug_only.c
+/* Very basic print functions, intended to be used with usb_rawhid.h
  * http://www.pjrc.com/teensy/
  * Copyright (c) 2008 PJRC.COM, LLC
  * 
@@ -28,6 +28,21 @@
 
 #include "print.h"
 
+#include "usb_rawhid_settings.h"
+
+static uint8_t printbuf[RAWHID_TX_SIZE];
+static uint8_t printbuf_cursor = 0;
+
+void pchar(char c) {
+  if (printbuf_cursor < RAWHID_TX_SIZE)
+    printbuf[printbuf_cursor++] = c;
+}
+void flush_print_buffer(void) {
+  pchar(0);
+  usb_rawhid_send(printbuf, 100);
+  printbuf_cursor = 0;
+}
+
 void print_P(const char *s)
 {
 	char c;
@@ -35,15 +50,15 @@ void print_P(const char *s)
 	while (1) {
 		c = pgm_read_byte(s++);
 		if (!c) break;
-		if (c == '\n') usb_debug_putchar('\r');
-		usb_debug_putchar(c);
+		if (c == '\n') pchar('\r');
+		pchar(c);
 	}
 }
 
 void phex4(uint8_t c)
 {
   c &= 0x0f;
-	usb_debug_putchar(c + ((c < 10) ? '0' : 'A' - 10));
+	pchar(c + ((c < 10) ? '0' : 'A' - 10));
 }
 
 void phex8(uint8_t c)

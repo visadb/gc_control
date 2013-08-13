@@ -2,7 +2,7 @@
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <util/delay.h>
-#include "usb_debug_only.h"
+#include "usb_rawhid.h"
 #include "print.h"
 
 #define ENABLE_INT0  (EIMSK |=  (1<<0))
@@ -15,7 +15,8 @@ volatile uint8_t data_from_interrupt_available;
 
 // Buffers. One byte per bit. Bit is considered 1 if any bit of byte is set
 volatile uint8_t gc_rx_buf[24];
-uint8_t id_status[24] = {0,0,0,0,1,0,0,1, 0,0,0,0,0,0,0,0, 0,0,1,0,0,0,0,0};
+uint8_t id_status[] = {0,0,0,0,1,0,0,1, 0,0,0,0,0,0,0,0, 0,0,1,0,0,0,0,0};
+uint8_t origins_buf[] = { };
 
 #define LED_ON      (PORTD |=  (1<<6))
 #define LED_OFF     (PORTD &= ~(1<<6))
@@ -46,8 +47,8 @@ int main(void)
     if (data_from_interrupt_available) {
       cli();
       LED_TOGGLE;
-      print("data:"); phex8(data_from_interrupt); pchar('\n');
-      usb_debug_flush_output();
+      //print("d:"); phex8(data_from_interrupt); pchar('\n');
+      //flush_print_buffer();
       data_from_interrupt_available = 0;
       data_from_interrupt = 0;
       sei();

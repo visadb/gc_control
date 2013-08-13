@@ -1,18 +1,23 @@
-#ifndef usb_serial_h__
-#define usb_serial_h__
+#ifndef usb_rawhid_h__
+#define usb_rawhid_h__
 
 #include <stdint.h>
 
 void usb_init(void);			// initialize everything
 uint8_t usb_configured(void);		// is the USB port configured
+int8_t usb_rawhid_recv(uint8_t *buffer, uint8_t timeout);  // receive a packet, with timeout
+int8_t usb_rawhid_send(const uint8_t *buffer, uint8_t timeout); // send a packet, with timeout
 
-int8_t usb_debug_putchar(uint8_t c);	// transmit a character
-void usb_debug_flush_output(void);	// immediately transmit any buffered output
-#define USB_DEBUG_HID
+// This file does not include the HID debug functions, so these empty
+// macros replace them with nothing, so users can compile code that
+// has calls to these functions.
+#define usb_debug_putchar(c)
+#define usb_debug_flush_output()
+
 
 
 // Everything below this point is only intended for usb_serial.c
-#ifdef USB_SERIAL_PRIVATE_INCLUDE
+#ifdef USB_PRIVATE_INCLUDE
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
@@ -28,10 +33,10 @@ void usb_debug_flush_output(void);	// immediately transmit any buffered output
 #define EP_SINGLE_BUFFER		0x02
 #define EP_DOUBLE_BUFFER		0x06
 
-#define EP_SIZE(s)	((s) == 64 ? 0x30 :	\
-			((s) == 32 ? 0x20 :	\
-			((s) == 16 ? 0x10 :	\
-			             0x00)))
+#define EP_SIZE(s)	((s) > 32 ? 0x30 :	\
+			((s) > 16 ? 0x20 :	\
+			((s) > 8  ? 0x10 :	\
+			            0x00)))
 
 #define MAX_ENDPOINT		4
 
@@ -72,13 +77,10 @@ void usb_debug_flush_output(void);	// immediately transmit any buffered output
 #define SET_INTERFACE			11
 // HID (human interface device)
 #define HID_GET_REPORT			1
+#define HID_GET_IDLE			2
 #define HID_GET_PROTOCOL		3
 #define HID_SET_REPORT			9
 #define HID_SET_IDLE			10
 #define HID_SET_PROTOCOL		11
-// CDC (communication class device)
-#define CDC_SET_LINE_CODING		0x20
-#define CDC_GET_LINE_CODING		0x21
-#define CDC_SET_CONTROL_LINE_STATE	0x22
 #endif
 #endif
