@@ -94,7 +94,7 @@ dataSignalFell:
 	st z+, r16		; store the value
 
 	dec r23			; One less bit to receive...
-	breq gotCommand
+	breq sendControllerStatus
 
 	ldi r16, DATA_RAISE_TIMEOUT
 waitHigh:
@@ -141,14 +141,31 @@ readError:
 	sts data_from_interrupt, r16
 	rjmp interruptDone
 
-gotCommand:
+sendControllerStatus:
 	ldi r16, 0x40
 	sts data_from_interrupt, r16
+
+	ldi r16, 50
+lp_delay_before_status_response:
+	dec r16
+	brne lp_delay_before_status_response
+
+	ldi zl, lo8(controller_status_buf)
+	ldi zh, hi8(controller_status_buf)
+	ldi r23, 64
+	rcall sendGCData
+
 	rjmp interruptDone
 
 sendOriginsPacket:
 	ldi r16, 0x41
 	sts data_from_interrupt, r16
+
+	ldi zl, lo8(origins_buf)
+	ldi zh, hi8(origins_buf)
+	ldi r23, 80
+	rcall sendGCData
+
 	rjmp interruptDone
 
 sendIdPacket:
@@ -182,7 +199,6 @@ lp_send0_3.6us:
 	brne lp_send0_3.6us
 	nop
 	nop
-
 	RELEASE_BUS
 	ldi r16, 3
 lp_send0_1.4us:
@@ -190,7 +206,6 @@ lp_send0_1.4us:
 	brne lp_send0_1.4us
 	nop
 	nop
-
 	dec r23
 	brne lp_sendGCData_bits
 	rjmp send_stop_bit
@@ -203,13 +218,11 @@ lp_send1_1.2us:
 	brne lp_send1_1.2us
 	nop
 	nop
-
 	RELEASE_BUS
 	ldi r16, 17
 lp_send1_3.8us:
 	dec r16
 	brne lp_send1_3.8us
-
 	dec r23
 	brne lp_sendGCData_bits
 	rjmp send_stop_bit

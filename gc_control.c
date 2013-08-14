@@ -15,8 +15,30 @@ volatile uint8_t data_from_interrupt_available;
 
 // Buffers. One byte per bit. Bit is considered 1 if any bit of byte is set
 volatile uint8_t gc_rx_buf[24];
-uint8_t id_status[] = {0,0,0,0,1,0,0,1, 0,0,0,0,0,0,0,0, 0,0,1,0,0,0,0,0};
-uint8_t origins_buf[] = { };
+uint8_t const id_status[] = {0,0,0,0,1,0,0,1, 0,0,0,0,0,0,0,0, 0,0,1,0,0,0,0,0};
+uint8_t const origins_buf[] = {
+  0,0,0,0,0,0,0,0, 1,0,0,0,0,0,0,0, // No buttons pressed
+  1,0,0,0,0,0,0,0, 1,0,0,0,0,0,0,0, // Joystick neutral
+  1,0,0,0,0,0,0,0, 1,0,0,0,0,0,0,0, // C-stick neutral
+  0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, // Shoulder L & R not pressed
+  0,0,0,0,0,0,1,0, 0,0,0,0,0,0,1,0  // unknown
+};
+uint8_t controller_status_buf[] = {
+//0 0 0 STY X B A  1 LSRSZ U D R L
+  0,0,0,0,0,0,0,0, 1,0,0,0,0,0,0,0,
+  1,0,0,0,0,0,0,0, 1,0,0,0,0,0,0,0, // Joystick X & Y
+  1,0,0,0,0,0,0,0, 1,0,0,0,0,0,0,0, // C-stick X & Y
+  0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, // Shoulder button values
+};
+
+#define STATUS_START_IDX  3
+#define STATUS_B_IDX      6
+#define STATUS_7_IDX      7
+#define STATUS_Z_IDX      11
+#define STATUS_DUP_IDX    12
+#define STATUS_DDOWN_IDX  13
+#define STATUS_DRIGHT_IDX 14
+#define STATUS_DLEFT_IDX  15
 
 #define LED_ON      (PORTD |=  (1<<6))
 #define LED_OFF     (PORTD &= ~(1<<6))
