@@ -3,6 +3,7 @@
 #include <avr/pgmspace.h>
 #include <util/delay.h>
 #include "usb_rawhid.h"
+#include "usb_rawhid_settings.h"
 #include "print.h"
 
 #define ENABLE_INT0  (EIMSK |=  (1<<0))
@@ -27,7 +28,7 @@ uint8_t const origins_buf[] = {
 };
 uint8_t controller_status_buf[] = {
   0x00, // 0 0 0 START Y X B A
-  0x80, // 1 LSHOULDER RSHOULDER Z UP DOWN RIGHT LLEFT
+  0x80, // 1 LSHOULDER RSHOULDER Z UP DOWN RIGHT LEFT
   0x80, 0x80, // Joystick X & Y
   0x80, 0x80, // C-stick X & Y
   0x00, 0x00  // Shoulder button positions
@@ -60,11 +61,13 @@ int main(void)
 
   while(1) {
     uint8_t recv_bytes;
-    uint8_t recv_buffer[64];
-    recv_bytes = usb_rawhid_recv(recv_buffer, 0);
+    uint8_t recv_buf[RAWHID_RX_SIZE];
+    recv_bytes = usb_rawhid_recv(recv_buf, 0);
     if (recv_bytes > 0) {
       cli();
       LED_TOGGLE;
+      controller_status_buf[0] = recv_buf[0];
+      controller_status_buf[1] = recv_buf[1];
       sei();
     }
 
