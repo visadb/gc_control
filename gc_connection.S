@@ -30,6 +30,7 @@
 ;  r1: GCC's zero reg, use as tmp, clr on return
 ; r16: tmp
 ; r23: number of bits left to send/receive
+; r24: number of bits left to send in current byte
 
 
 .global INT0_vect
@@ -38,6 +39,7 @@ INT0_vect:
 	out IO_GPIOR0, r1
 	out IO_GPIOR1, r16
 	out IO_GPIOR2, r23
+	push r24
 
 	ldi zl, lo8(gc_rx_buf)
 	ldi zh, hi8(gc_rx_buf)
@@ -48,12 +50,13 @@ INT0_vect:
 interruptDone:
 	ldi r16, 1
 	sts data_from_interrupt_available, r16
+
+	pop r24
 	in r23, IO_GPIOR2
 	in r16, IO_GPIOR1
 	in r1,  IO_GPIOR0
 	out IO_SREG, r1
 	clr r1
-	; cbi IO_EIMSK,0 ; disable INT0
 	sbi IO_EIFR,0 ; clear INT0 flag
 	reti
 
@@ -85,10 +88,12 @@ waitFall:
 	nop
 	nop
 	nop
+	nop
+	nop
 dataSignalFell:
 	; I check the pin on the 50th cycle.
 
-	rcall alignDelay	; waste enough cycles to be aligned on cycle 32
+	rcall alignDelay	; waste enough cycles to be aligned
 	in r16, IO_PIND		; read the input port
 	andi r16, GC_DATA_MASK	; isolate the data bit
 	st z+, r16		; store the value
@@ -106,9 +111,9 @@ waitHigh:
 
 	rjmp readNextBit
 
-; 3 + 1 + 9*3-1 + 1 + 4 = 48
+; 3 + 1 + 8*3-1 + 1 + 4 = 45
 alignDelay:
-	ldi r16, 9
+	ldi r16, 8
 lp634534:
 	dec r16
 	brne lp634534
@@ -185,12 +190,23 @@ sendIdPacket:
 #define RELEASE_BUS  cbi IO_DDRD, GC_DATA_BIT
 
 sendGCData:
+	ldi r24, 0 ; bits left to send in current byte
 
 lp_sendGCData_bits:
-	ld r16, z+
-	tst r16
-	brne send1
+	tst r24
+	breq read_next_byte
 	nop
+	nop
+	rjmp read_next_bit_from_current_byte
+read_next_byte:
+	ld r1, z+
+	ldi r24, 8
+read_next_bit_from_current_byte:
+	dec r24
+	lsl r1
+	brcs send1
+
+	nop ; compensate for cycle that would have been used on branch to send1
 send0:
 	PULL_BUS_LOW
 	ldi r16, 18
@@ -200,11 +216,10 @@ lp_send0_3.6us:
 	nop
 	nop
 	RELEASE_BUS
-	ldi r16, 3
+	ldi r16, 2
 lp_send0_1.4us:
 	dec r16
 	brne lp_send0_1.4us
-	nop
 	nop
 	dec r23
 	brne lp_sendGCData_bits
@@ -219,10 +234,11 @@ lp_send1_1.2us:
 	nop
 	nop
 	RELEASE_BUS
-	ldi r16, 17
+	ldi r16, 15
 lp_send1_3.8us:
 	dec r16
 	brne lp_send1_3.8us
+	nop
 	dec r23
 	brne lp_sendGCData_bits
 	rjmp send_stop_bit
@@ -234,9 +250,9 @@ send_stop_bit:
 	nop
 	PULL_BUS_LOW
 	ldi r16,5
-lp_stop_bit_delay:
+lp_stop_bit_delay_1.2us:
 	dec r16
-	brne lp_stop_bit_delay
+	brne lp_stop_bit_delay_1.2us
 	nop
 	nop
 	RELEASE_BUS

@@ -13,32 +13,25 @@
 volatile uint8_t data_from_interrupt;
 volatile uint8_t data_from_interrupt_available;
 
-// Buffers. One byte per bit. Bit is considered 1 if any bit of byte is set
+// Receive buffer. One byte per bit. Bit is considered 1 if any bit of byte is set
 volatile uint8_t gc_rx_buf[24];
-uint8_t const id_status[] = {0,0,0,0,1,0,0,1, 0,0,0,0,0,0,0,0, 0,0,1,0,0,0,0,0};
+
+// Send buffers
+uint8_t const id_status[] = {0x09, 0x00, 0x20};
 uint8_t const origins_buf[] = {
-  0,0,0,0,0,0,0,0, 1,0,0,0,0,0,0,0, // No buttons pressed
-  1,0,0,0,0,0,0,0, 1,0,0,0,0,0,0,0, // Joystick neutral
-  1,0,0,0,0,0,0,0, 1,0,0,0,0,0,0,0, // C-stick neutral
-  0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, // Shoulder L & R not pressed
-  0,0,0,0,0,0,1,0, 0,0,0,0,0,0,1,0  // unknown
+  0x00, 0x80, // No buttons pressed
+  0x80, 0x80, // Joystick neutral
+  0x80, 0x80, // C-stick neutral
+  0x00, 0x00, // Shoulder L & R not pressed
+  0x02, 0x02  // unknown
 };
 uint8_t controller_status_buf[] = {
-//0 0 0 STY X B A  1 LSRSZ U D R L
-  0,0,0,0,0,0,0,0, 1,0,0,0,0,0,0,0,
-  1,0,0,0,0,0,0,0, 1,0,0,0,0,0,0,0, // Joystick X & Y
-  1,0,0,0,0,0,0,0, 1,0,0,0,0,0,0,0, // C-stick X & Y
-  0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, // Shoulder button values
+  0x00, // 0 0 0 START Y X B A
+  0x80, // 1 LSHOULDER RSHOULDER Z UP DOWN RIGHT LLEFT
+  0x80, 0x80, // Joystick X & Y
+  0x80, 0x80, // C-stick X & Y
+  0x00, 0x00  // Shoulder button positions
 };
-
-#define STATUS_START_IDX  3
-#define STATUS_B_IDX      6
-#define STATUS_7_IDX      7
-#define STATUS_Z_IDX      11
-#define STATUS_DUP_IDX    12
-#define STATUS_DDOWN_IDX  13
-#define STATUS_DRIGHT_IDX 14
-#define STATUS_DLEFT_IDX  15
 
 #define LED_ON      (PORTD |=  (1<<6))
 #define LED_OFF     (PORTD &= ~(1<<6))
@@ -66,9 +59,17 @@ int main(void)
   sei();
 
   while(1) {
-    if (data_from_interrupt_available) {
+    uint8_t recv_bytes;
+    uint8_t recv_buffer[64];
+    recv_bytes = usb_rawhid_recv(recv_buffer, 0);
+    if (recv_bytes > 0) {
       cli();
       LED_TOGGLE;
+      sei();
+    }
+
+    if (data_from_interrupt_available) {
+      cli();
       //print("d:"); phex8(data_from_interrupt); pchar('\n');
       //flush_print_buffer();
       data_from_interrupt_available = 0;
