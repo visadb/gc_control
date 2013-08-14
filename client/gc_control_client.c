@@ -100,10 +100,12 @@ void send_status(controller_status_t status) {
 
   buf[0] = (status >> 8) & 0xff;
   buf[1] = status & 0xff;
-  num = rawhid_send(0, buf, RAWHID_RX_SIZE, 100);
-  if (num < 0) {
-    die("Error sending command, device went offline\n");
-  }
+  //printf("Sending status 0x%04x\n", status);
+  num = rawhid_send(0, buf, RAWHID_RX_SIZE, 200);
+  if (num < 0)
+    die("Sending status failed, device went offline\n");
+  else if (num == 0)
+    die("Sending status failed, timeout was reached\n");
 }
 
 static const struct button_entry {
@@ -161,7 +163,7 @@ void play_macro(const char *filename) {
          die("Argument of PressAndRelease missing");
        printf("%s %s\n", cmd, str_arg); 
        press_button(&controller_status, str_arg);
-       delay_ms(50);
+       delay_ms(100);
        release_button(&controller_status, str_arg);
     } else if (streq("Sleep", cmd)) {
        if (fscanf(f, "%lf", &decimal_arg) < 1)
