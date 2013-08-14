@@ -10,6 +10,7 @@
 #endif
 
 #include "hid.h"
+#include "../usb_rawhid_settings.h"
 
 
 static char get_keystroke(void);
@@ -17,40 +18,40 @@ static void delay_ms(unsigned int msec);
 
 void use_device(void) {
 	int i, num;
-	char c, buf[64+1];
+	char c, buf[RAWHID_TX_SIZE+1];
 
   while (1) {
     // check if any Raw HID packet has arrived
-    num = rawhid_recv(0, buf, 64, 10);
+    num = rawhid_recv(0, buf, RAWHID_TX_SIZE, 1);
     if (num < 0) {
       printf("\nerror reading, device went offline\n");
-      //rawhid_close(0);
       return;
     }
     if (num > 0) {
-      buf[64] = '\0';
+      buf[RAWHID_TX_SIZE] = '\0';
       printf("recv: %s", buf);
     }
+
     // check if any input on stdin
     while ((c = get_keystroke()) >= 32) {
       printf("\ngot key '%c', sending...\n", c);
       buf[0] = c;
-      for (i=1; i<64; i++) {
-        buf[i] = 0;
+      num = rawhid_send(0, buf, RAWHID_RX_SIZE, 100);
+      if (num < 0) {
+        printf("\nerror writing, device went offline\n");
+        return;
       }
-      rawhid_send(0, buf, 64, 100);
     }
   }
 }
 
-int main()
-{
+int main() {
 	int r;
 
 	printf("Waiting for device:");
 	fflush(stdout);
   while (1) {
-    r = rawhid_open(1, 0x16C0, 0x0480, 0xFFEE, 0x0200);
+    r = rawhid_open(1, VENDOR_ID, PRODUCT_ID, RAWHID_USAGE_PAGE, RAWHID_USAGE);
     if (r <= 0) {
       printf(".");
 			fflush(stdout);
