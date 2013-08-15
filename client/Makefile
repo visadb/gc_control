@@ -11,25 +11,31 @@ PROG = gc_control_client
 # Just edit the variable above for WINDOWS, then use "make" to build rawhid.exe
 
 ifeq ($(OS), LINUX)
-TARGET = $(PROG)
-CC = gcc
-STRIP = strip
-CFLAGS = -Wall -O2 -DOS_$(OS)
-LIBS = -lusb
+	TARGET = $(PROG)
+	CC = gcc
+	STRIP = strip
+ifdef DEBUG
+		CFLAGS = -Wall -g -DOS_$(OS)
+		LDFLAGS = -g
+else
+		CFLAGS = -Wall -O2 -DOS_$(OS)
+		LDFLAGS =
+endif
+	LIBS = -lusb
 else ifeq ($(OS), MACOSX)
-TARGET = $(PROG).dmg
-SDK = /Developer/SDKs/MacOSX10.5.sdk
-ARCH = -mmacosx-version-min=10.5 -arch ppc -arch i386
-CC = gcc
-STRIP = strip
-CFLAGS = -Wall -O2 -DOS_$(OS) -isysroot $(SDK) $(ARCH)
-LIBS = $(ARCH) -Wl,-syslibroot,$(SDK) -framework IOKit -framework CoreFoundation
+	TARGET = $(PROG).dmg
+	SDK = /Developer/SDKs/MacOSX10.5.sdk
+	ARCH = -mmacosx-version-min=10.5 -arch ppc -arch i386
+	CC = gcc
+	STRIP = strip
+	CFLAGS = -Wall -O2 -DOS_$(OS) -isysroot $(SDK) $(ARCH)
+	LIBS = $(ARCH) -Wl,-syslibroot,$(SDK) -framework IOKit -framework CoreFoundation
 else ifeq ($(OS), WINDOWS)
-TARGET = $(PROG).exe
-CC = i586-mingw32msvc-gcc
-STRIP = i586-mingw32msvc-strip
-CFLAGS = -Wall -O2 -DOS_$(OS)
-LIBS = -lhid -lsetupapi
+	TARGET = $(PROG).exe
+	CC = i586-mingw32msvc-gcc
+	STRIP = i586-mingw32msvc-strip
+	CFLAGS = -Wall -O2 -DOS_$(OS)
+	LIBS = -lhid -lsetupapi
 endif
 
 OBJS = $(PROG).o hid.o
@@ -38,8 +44,10 @@ OBJS = $(PROG).o hid.o
 all: $(TARGET)
 
 $(PROG): $(OBJS)
-	$(CC) -o $(PROG) $(OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $(PROG) $(OBJS) $(LIBS)
+ifndef DEBUG
 	$(STRIP) $(PROG)
+endif
 
 $(PROG).exe: $(PROG)
 	cp $(PROG) $(PROG).exe
