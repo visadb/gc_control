@@ -1,9 +1,11 @@
+#include <errno.h>
+#include <libgen.h>
+#include <stdarg.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
 #include <string.h>
 #include <unistd.h>
-#include <stdint.h>
 
 #if defined(OS_LINUX) || defined(OS_MACOSX)
 #include <sys/ioctl.h>
@@ -141,13 +143,44 @@ void release_button(controller_status_t *status, const char *button_name) {
   send_status(*status);
 }
 
+/* Returns dirname of path in a malloc'd buffer */
+static char *mallocing_dirname(const char *path) {
+  char *tmp, *dirname_of_path;
+
+  tmp = strdup(path);
+  if (tmp == NULL)
+    return NULL;
+  dirname_of_path = strdup(dirname(tmp));
+  if (dirname_of_path == NULL)
+    return NULL;
+  free(tmp);
+
+  return dirname_of_path;
+}
+
+static char *gnu_getcwd() {
+  size_t size = 100;
+
+  while (1) {
+    char *buffer = (char*)malloc(size);
+    if (buffer == NULL)
+      return 0;
+    if (getcwd(buffer, size) == buffer)
+      return buffer;
+    free(buffer);
+    if (errno != ERANGE)
+      return 0;
+    size *= 2;
+  }
+}
+
 #define MAX_TOKEN_LENGTH 64
 #define STRING_TOKEN_SCANF_FMT "%64s"
 
-
 void play_macro(const char *filename) {
-  int ret;
-  char cmd[MAX_TOKEN_LENGTH], str_arg[MAX_TOKEN_LENGTH];
+  char *old_cwd, *dirname_of_file;
+
+  char cmd[MAX_TOKEN_LENGTH+1], str_arg[MAX_TOKEN_LENGTH+1];
   double decimal_arg;
   unsigned int uint_arg;
   static controller_status_t controller_status = 0x0080;
@@ -159,6 +192,15 @@ void play_macro(const char *filename) {
     printf("Unable to open file %s\n", filename);
     exit(1);
   }
+
+  if ((old_cwd = gnu_getcwd()) == NULL)
+    die("Getting CWD failed: %s", strerror(errno));
+
+  if ((dirname_of_file = mallocing_dirname(filename)) == NULL)
+    die("mallocing_dirname failed");
+  chdir(dirname_of_file);
+  free(dirname_of_file);
+
   /*
    * Macro syntax:
    *    Until-end-of-line-comment character is '#'
@@ -167,8 +209,7 @@ void play_macro(const char *filename) {
    *    Import <filename(string)> <numberOfRepeats(integer)>
    */
   while (1) {
-    ret = fscanf(f, STRING_TOKEN_SCANF_FMT, cmd);
-    if (ret < 1 || ret == EOF)
+    if (fscanf(f, STRING_TOKEN_SCANF_FMT, cmd) < 1)
       break;
 
     if (cmd[0] == '#') { // # starts a until-end-of-line comment
@@ -178,26 +219,29 @@ void play_macro(const char *filename) {
         putchar(c);
       putchar('\n');
     } else if (streq("PressAndRelease", cmd)) {
-       if (fscanf(f, STRING_TOKEN_SCANF_FMT, str_arg) < 1)
-         die("Argument of PressAndRelease missing");
-       printf("%s %s\n", cmd, str_arg);
-       press_button(&controller_status, str_arg);
-       delay_ms(100);
-       release_button(&controller_status, str_arg);
+      if (fscanf(f, STRING_TOKEN_SCANF_FMT, str_arg) < 1)
+        die("Argument of PressAndRelease missing");
+      printf("%s %s\n", cmd, str_arg);
+      press_button(&controller_status, str_arg);
+      delay_ms(100);
+      release_button(&controller_status, str_arg);
     } else if (streq("Sleep", cmd)) {
-       if (fscanf(f, "%lf", &decimal_arg) < 1)
-         die("Argument of Sleep invalid or missing");
-       printf("%s %f\n", cmd, decimal_arg);
-       delay_ms(decimal_arg * 1000);
+      if (fscanf(f, "%lf", &decimal_arg) < 1)
+        die("Argument of Sleep invalid or missing");
+      printf("%s %f\n", cmd, decimal_arg);
+      delay_ms(decimal_arg * 1000);
     } else if (streq("Import", cmd)) {
-       if (fscanf(f, STRING_TOKEN_SCANF_FMT " %u", str_arg, &uint_arg) < 2)
-         die("Argument(s) of Import invalid or missing");
-       printf("%s %s %u\n", cmd, str_arg, uint_arg);
-       while (uint_arg--)
-         play_macro(str_arg);
+      if (fscanf(f, STRING_TOKEN_SCANF_FMT " %u", str_arg, &uint_arg) < 2)
+        die("Argument(s) of Import invalid or missing");
+      printf("%s %s %u\n", cmd, str_arg, uint_arg);
+      while (uint_arg--)
+        play_macro(str_arg);
     }
   }
 
+  if (chdir(old_cwd) != 0)
+    die("chdir to %s failed", old_cwd);
+  free(old_cwd);
   fclose(f);
 }
 
