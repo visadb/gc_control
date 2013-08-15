@@ -141,35 +141,60 @@ void release_button(controller_status_t *status, const char *button_name) {
   send_status(*status);
 }
 
+#define MAX_TOKEN_LENGTH 64
+#define STRING_TOKEN_SCANF_FMT "%64s"
+
 
 void play_macro(const char *filename) {
   int ret;
-  char cmd[64], str_arg[16];
+  char cmd[MAX_TOKEN_LENGTH], str_arg[MAX_TOKEN_LENGTH];
   double decimal_arg;
-  controller_status_t controller_status = 0x0080;
+  unsigned int uint_arg;
+  static controller_status_t controller_status = 0x0080;
+
+  printf("Playing macro %s\n", filename);
 
   FILE *f = fopen(filename, "r");
   if (!f) {
     printf("Unable to open file %s\n", filename);
     exit(1);
   }
+  /*
+   * Macro syntax:
+   *    Until-end-of-line-comment character is '#'
+   *    PressAndRelease <ButtonName(string)>
+   *    Sleep <NumberOfSeconds(double)>
+   *    Import <filename(string)> <numberOfRepeats(integer)>
+   */
   while (1) {
-    ret = fscanf(f, "%64s", cmd);
+    ret = fscanf(f, STRING_TOKEN_SCANF_FMT, cmd);
     if (ret < 1 || ret == EOF)
       break;
 
-    if (streq("PressAndRelease", cmd)) {
-       if (fscanf(f, "%16s", str_arg) < 1)
+    if (cmd[0] == '#') { // # starts a until-end-of-line comment
+      char c;
+      printf(cmd);
+      while ((c = fgetc(f)) != '\n' && c != EOF)
+        putchar(c);
+      putchar('\n');
+    } else if (streq("PressAndRelease", cmd)) {
+       if (fscanf(f, STRING_TOKEN_SCANF_FMT, str_arg) < 1)
          die("Argument of PressAndRelease missing");
-       printf("%s %s\n", cmd, str_arg); 
+       printf("%s %s\n", cmd, str_arg);
        press_button(&controller_status, str_arg);
        delay_ms(100);
        release_button(&controller_status, str_arg);
     } else if (streq("Sleep", cmd)) {
        if (fscanf(f, "%lf", &decimal_arg) < 1)
          die("Argument of Sleep invalid or missing");
-       printf("%s %f\n", cmd, decimal_arg); 
+       printf("%s %f\n", cmd, decimal_arg);
        delay_ms(decimal_arg * 1000);
+    } else if (streq("Import", cmd)) {
+       if (fscanf(f, STRING_TOKEN_SCANF_FMT " %u", str_arg, &uint_arg) < 2)
+         die("Argument(s) of Import invalid or missing");
+       printf("%s %s %u\n", cmd, str_arg, uint_arg);
+       while (uint_arg--)
+         play_macro(str_arg);
     }
   }
 
@@ -193,7 +218,6 @@ int main(int argc, char **argv) {
 
     if (argc == 2) {
       while (1) {
-        printf("Playing macro %s\n", argv[1]);
         play_macro(argv[1]);
       }
     } else {
