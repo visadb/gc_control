@@ -1,0 +1,9 @@
+# See gc_control_client.c for a more detailed description of macro syntax
+
+# This is a comment. It ends at end of line.
+PressAndRelease A # Presses A-button and releases it after a small delay
+Sleep 0.3 # Waits for 0.3 seconds
+
+PressAndRelease A Sleep 0.8 # Commands can be written on the same line
+
+Import another_macro.gcmacro 2 # Run another_macro.gcmacro twice
