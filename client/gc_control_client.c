@@ -185,8 +185,6 @@ void play_macro(const char *filename) {
   unsigned int uint_arg;
   static controller_status_t controller_status = 0x0080;
 
-  printf("Playing macro %s\n", filename);
-
   FILE *f = fopen(filename, "r");
   if (!f) {
     printf("Unable to open file %s\n", filename);
@@ -231,11 +229,17 @@ void play_macro(const char *filename) {
       printf("%s %f\n", cmd, decimal_arg);
       delay_ms(decimal_arg * 1000);
     } else if (streq("Import", cmd)) {
+      int i;
       if (fscanf(f, STRING_TOKEN_SCANF_FMT " %u", str_arg, &uint_arg) < 2)
         die("Argument(s) of Import invalid or missing");
       printf("%s %s %u\n", cmd, str_arg, uint_arg);
-      while (uint_arg--)
+      for (i=1;  i<= uint_arg; i++) {
+        printf("Playing macro %s", str_arg);
+        if (uint_arg > 1)
+          printf(" (Repeat %d of %d)", i, uint_arg);
+        putchar('\n');
         play_macro(str_arg);
+      }
     }
   }
 
@@ -262,6 +266,7 @@ int main(int argc, char **argv) {
 
     if (argc == 2) {
       while (1) {
+        printf("Playing macro %s\n", argv[1]);
         play_macro(argv[1]);
       }
     } else {
