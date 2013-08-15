@@ -11,9 +11,6 @@
 #define DISABLE_INT0_ASM "cbi 0x1d,0\n\t"
 #define CLEAR_INT0_FLAG (EIFR |= (1<<0))
 
-volatile uint8_t data_from_interrupt;
-volatile uint8_t data_from_interrupt_available;
-
 // Receive buffer. One byte per bit. Bit is considered 1 if any bit of byte is set
 volatile uint8_t gc_rx_buf[24];
 
@@ -49,7 +46,6 @@ int main(void)
   CPU_PRESCALE(0);
   CONFIG_DATA_AND_LED;
   LED_OFF;
-  data_from_interrupt_available = 0;
 
   usb_init();
   while(!usb_configured());
@@ -69,16 +65,6 @@ int main(void)
       controller_status_buf[0] = recv_buf[0];
       controller_status_buf[1] = recv_buf[1];
       sei();
-    }
-
-    if (data_from_interrupt_available) {
-      cli();
-      //print("d:"); phex8(data_from_interrupt); pchar('\n');
-      //flush_print_buffer();
-      data_from_interrupt_available = 0;
-      data_from_interrupt = 0;
-      sei();
-      _delay_ms(50);
     }
   }
 }

@@ -48,9 +48,6 @@ INT0_vect:
 	rjmp dataSignalFell
 
 interruptDone:
-	ldi r16, 1
-	sts data_from_interrupt_available, r16
-
 	pop r24
 	in r23, IO_GPIOR2
 	in r16, IO_GPIOR1
@@ -142,14 +139,9 @@ not_40: ; probably 0x00
 	rjmp sendIdPacket
 
 readError:
-	ldi r16, 0x55
-	sts data_from_interrupt, r16
 	rjmp interruptDone
 
 sendControllerStatus:
-	ldi r16, 0x40
-	sts data_from_interrupt, r16
-
 	ldi r16, 50
 lp_delay_before_status_response:
 	dec r16
@@ -163,9 +155,6 @@ lp_delay_before_status_response:
 	rjmp interruptDone
 
 sendOriginsPacket:
-	ldi r16, 0x41
-	sts data_from_interrupt, r16
-
 	ldi zl, lo8(origins_buf)
 	ldi zh, hi8(origins_buf)
 	ldi r23, 80
@@ -174,9 +163,6 @@ sendOriginsPacket:
 	rjmp interruptDone
 
 sendIdPacket:
-	ldi r16, 0x1d
-	sts data_from_interrupt, r16
-
 	ldi zl, lo8(id_status)
 	ldi zh, hi8(id_status)
 	ldi r23, 24
