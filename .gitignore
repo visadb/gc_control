@@ -8,3 +8,4 @@
 *.lss
 *.sym
 /client/gc_control_client
+/client/macros
