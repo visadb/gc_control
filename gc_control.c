@@ -4,15 +4,14 @@
 #include <util/delay.h>
 #include "usb_rawhid.h"
 #include "usb_rawhid_settings.h"
-#include "print.h"
 
 #define ENABLE_INT0  (EIMSK |=  (1<<0))
 #define DISABLE_INT0 (EIMSK &= ~(1<<0))
 #define DISABLE_INT0_ASM "cbi 0x1d,0\n\t"
 #define CLEAR_INT0_FLAG (EIFR |= (1<<0))
 
-// Receive buffer. One byte per bit. Bit is considered 1 if any bit of byte is set
-volatile uint8_t gc_rx_buf[24];
+// Receive buffer, will need at most 24 bits
+volatile uint8_t gc_rx_buf[3];
 
 // Send buffers
 uint8_t const id_status[] = {0x09, 0x00, 0x20};
@@ -37,6 +36,11 @@ uint8_t controller_status_buf[] = {
 
 #define CPU_PRESCALE(n) (CLKPR=0x80, CLKPR=(n))
 
+#define DEBUG_PORT  PORTC
+#define DEBUG_PIN   PINC
+#define DEBUG_DDR   DDRC
+#define CONFIG_DEBUG_PORT (DEBUG_DDR = 0xff, DEBUG_PORT=0x00)
+
 //led=output, data=input w/o pull-up:
 #define CONFIG_DATA_AND_LED (DDRD=(1<<6), PORTD=0x00)
 
@@ -46,6 +50,7 @@ int main(void)
   CPU_PRESCALE(0);
   CONFIG_DATA_AND_LED;
   LED_OFF;
+  CONFIG_DEBUG_PORT;
 
   usb_init();
   while(!usb_configured());
@@ -60,8 +65,8 @@ int main(void)
     uint8_t recv_buf[RAWHID_RX_SIZE];
     recv_bytes = usb_rawhid_recv(recv_buf, 0);
     if (recv_bytes > 0) {
-      cli();
       LED_TOGGLE;
+      cli();
       controller_status_buf[0] = recv_buf[0];
       controller_status_buf[1] = recv_buf[1];
       sei();

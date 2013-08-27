@@ -24,7 +24,7 @@
 // bandwidth is no longer available to other USB devices.
 #define RAWHID_TX_SIZE      16 // transmit packet size
 #define RAWHID_TX_INTERVAL  5  // max # of ms between transmit packets
-#define RAWHID_RX_SIZE      8  // receive packet size
+#define RAWHID_RX_SIZE      2  // receive packet size
 #define RAWHID_RX_INTERVAL  1  // max # of ms between receive packets
 
 #endif
