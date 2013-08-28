@@ -2,9 +2,11 @@ Overview
 --------
 
 This project contains software for using a Teensy++ 2.0 as a programmable
-Gamecube controller. It needs Linux for compiling and running the client. It
-should not be too difficult to support Windows and OSX -- pull requests are
-welcome. ;)
+Gamecube controller. Currently only the buttons of the controller are
+supported, not joysticks or shoulder button sliders.
+
+This project needs Linux for compiling and running the client. It should not be
+too difficult to support Windows and OSX -- pull requests are welcome. ;)
 
 The software is divided in two parts:
 
