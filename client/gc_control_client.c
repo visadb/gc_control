@@ -1,5 +1,6 @@
 #include <errno.h>
 #include <libgen.h>
+#include <signal.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -96,6 +97,8 @@ int streq(const char *a, const char *b) {
   return strcmp(a, b) == 0;
 }
 
+#define STATUS_NO_BUTTONS 0x0080
+
 void send_status(controller_status_t status) {
   int num;
   static unsigned char buf[RAWHID_RX_SIZE];
@@ -183,7 +186,7 @@ void play_macro(const char *filename) {
   char cmd[MAX_TOKEN_LENGTH+1], str_arg[MAX_TOKEN_LENGTH+1];
   double decimal_arg;
   unsigned int uint_arg;
-  static controller_status_t controller_status = 0x0080;
+  static controller_status_t controller_status = STATUS_NO_BUTTONS;
 
   FILE *f = fopen(filename, "r");
   if (!f) {
@@ -249,8 +252,19 @@ void play_macro(const char *filename) {
   fclose(f);
 }
 
+void die_gracefully(int signal_number) {
+  printf("Caught signal %d, dying gracefully...\n", signal_number);
+  send_status(STATUS_NO_BUTTONS);
+  exit(0);
+}
+
 int main(int argc, char **argv) {
 	int r;
+
+  signal(SIGINT, die_gracefully);
+  signal(SIGQUIT, die_gracefully);
+  signal(SIGTERM, die_gracefully);
+  signal(SIGKILL, die_gracefully);
 
 	printf("Waiting for device:");
 	fflush(stdout);
