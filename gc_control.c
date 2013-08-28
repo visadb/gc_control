@@ -65,11 +65,14 @@ int main(void)
     uint8_t recv_buf[RAWHID_RX_SIZE];
     recv_bytes = usb_rawhid_recv(recv_buf, 0);
     if (recv_bytes > 0) {
-      LED_TOGGLE;
       cli();
       controller_status_buf[0] = recv_buf[0];
       controller_status_buf[1] = recv_buf[1];
       sei();
+      if (recv_buf[0] == 0x00 && recv_buf[1] == 0x80)
+        LED_OFF;
+      else
+        LED_ON;
     }
   }
 }
