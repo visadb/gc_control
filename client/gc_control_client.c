@@ -261,11 +261,6 @@ void die_gracefully(int signal_number) {
 int main(int argc, char **argv) {
 	int r;
 
-  signal(SIGINT, die_gracefully);
-  signal(SIGQUIT, die_gracefully);
-  signal(SIGTERM, die_gracefully);
-  signal(SIGKILL, die_gracefully);
-
 	printf("Waiting for device:");
 	fflush(stdout);
   while (1) {
@@ -276,7 +271,12 @@ int main(int argc, char **argv) {
       delay_ms(1000);
       continue;
     }
+
     printf("found rawhid device\n");
+    signal(SIGINT, die_gracefully);
+    signal(SIGQUIT, die_gracefully);
+    signal(SIGTERM, die_gracefully);
+    signal(SIGKILL, die_gracefully);
 
     if (argc == 2) {
       while (1) {
