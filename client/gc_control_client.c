@@ -279,8 +279,9 @@ int main(int argc, char **argv) {
     signal(SIGKILL, die_gracefully);
 
     if (argc == 2) {
+      int count = 1;
       while (1) {
-        printf("Playing macro %s\n", argv[1]);
+        printf("Playing macro %s (iter %d)\n", argv[1], count++);
         play_macro(argv[1]);
       }
     } else {
