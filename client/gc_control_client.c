@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <errno.h>
 #include <libgen.h>
 #include <signal.h>
@@ -259,15 +260,38 @@ void die_gracefully(int signal_number) {
 }
 
 int main(int argc, char **argv) {
-	int r;
+  int loop_macro_infinitely = 1;
+  int loop_macro_count = 0;
 
-	printf("Waiting for device:");
-	fflush(stdout);
+  int c;
+  while ((c = getopt (argc, argv, "c:")) != -1) {
+    switch (c) {
+      case 'c':
+        loop_macro_infinitely = 0;
+        loop_macro_count = atoi(optarg);
+        break;
+      case '?':
+        if (optopt == 'c')
+          fprintf (stderr, "Option -%c requires an argument.\n", optopt);
+        else if (isprint (optopt))
+          fprintf (stderr, "Unknown option `-%c'.\n", optopt);
+        else
+          fprintf (stderr,
+              "Unknown option character `\\x%x'.\n",
+              optopt);
+        return 1;
+      default:
+        abort();
+    }
+  }
+
+  printf("Waiting for device:");
+  fflush(stdout);
   while (1) {
-    r = rawhid_open(1, VENDOR_ID, PRODUCT_ID, RAWHID_USAGE_PAGE, RAWHID_USAGE);
+    int r = rawhid_open(1, VENDOR_ID, PRODUCT_ID, RAWHID_USAGE_PAGE, RAWHID_USAGE);
     if (r <= 0) {
       printf(".");
-			fflush(stdout);
+      fflush(stdout);
       delay_ms(1000);
       continue;
     }
@@ -278,11 +302,15 @@ int main(int argc, char **argv) {
     signal(SIGTERM, die_gracefully);
     signal(SIGKILL, die_gracefully);
 
-    if (argc == 2) {
+    if (optind < argc) {
       int count = 1;
-      while (1) {
-        printf("Playing macro %s (iter %d)\n", argv[1], count++);
-        play_macro(argv[1]);
+      while (loop_macro_infinitely || count <= loop_macro_count) {
+        printf("Playing macro %s (iter %d", argv[optind], count++);
+        if (loop_macro_count != 0)
+          printf("/%d)\n", loop_macro_count);
+        else
+          printf("/inf)\n");
+        play_macro(argv[optind]);
       }
     } else {
       use_device_with_keyboard();
@@ -294,37 +322,37 @@ int main(int argc, char **argv) {
 // Linux (POSIX) implementation of _kbhit().
 // Morgan McGuire, morgan@cs.brown.edu
 static int _kbhit() {
-	static const int STDIN = 0;
-	static int initialized = 0;
-	int bytesWaiting;
+  static const int STDIN = 0;
+  static int initialized = 0;
+  int bytesWaiting;
 
-	if (!initialized) {
-		// Use termios to turn off line buffering
-		struct termios term;
-		tcgetattr(STDIN, &term);
-		term.c_lflag &= ~ICANON;
-		tcsetattr(STDIN, TCSANOW, &term);
-		setbuf(stdin, NULL);
-		initialized = 1;
-	}
-	ioctl(STDIN, FIONREAD, &bytesWaiting);
-	return bytesWaiting;
+  if (!initialized) {
+    // Use termios to turn off line buffering
+    struct termios term;
+    tcgetattr(STDIN, &term);
+    term.c_lflag &= ~ICANON;
+    tcsetattr(STDIN, TCSANOW, &term);
+    setbuf(stdin, NULL);
+    initialized = 1;
+  }
+  ioctl(STDIN, FIONREAD, &bytesWaiting);
+  return bytesWaiting;
 }
 static char _getch(void) {
-	char c;
-	if (fread(&c, 1, 1, stdin) < 1) return 0;
-	return c;
+  char c;
+  if (fread(&c, 1, 1, stdin) < 1) return 0;
+  return c;
 }
 #endif
 
 
 static char get_keystroke(void)
 {
-	if (_kbhit()) {
-		char c = _getch();
-		if (c >= 32) return c;
-	}
-	return 0;
+  if (_kbhit()) {
+    char c = _getch();
+    if (c >= 32) return c;
+  }
+  return 0;
 }
 
 
@@ -332,12 +360,12 @@ static char get_keystroke(void)
 #include <windows.h>
 static void delay_ms(unsigned int msec)
 {
-	Sleep(msec);
+  Sleep(msec);
 }
 #else
 #include <unistd.h>
 static void delay_ms(unsigned int msec)
 {
-	usleep(msec * 1000);
+  usleep(msec * 1000);
 }
 #endif
