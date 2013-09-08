@@ -312,6 +312,7 @@ int main(int argc, char **argv) {
           printf("/inf)\n");
         play_macro(argv[optind]);
       }
+      exit(0);
     } else {
       use_device_with_keyboard();
     }
