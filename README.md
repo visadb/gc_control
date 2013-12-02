@@ -2,8 +2,10 @@ Overview
 --------
 
 This project contains software for using a Teensy++ 2.0 as a programmable
-Gamecube controller. Currently only the buttons of the controller are
-supported, not joysticks or shoulder button sliders.
+Gamecube controller that is controlled through USB. Currently only the buttons
+of the controller are supported, not joysticks or shoulder button sliders.
+
+![Teensy on breadboard with cables](https://raw.github.com/yarogami/gc_control/master/teensy_on_breadboard_with_cables.jpg)
 
 See [a demo in Youtube](http://www.youtube.com/watch?v=K-2K3p3ANhw).
 
